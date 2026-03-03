@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BUREAUlingo – Ihre Bewerbung auf Deutsch</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#0d1b33}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#1a2744}
+::-webkit-scrollbar-thumb{background:#e8650a;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="bl-root"></div>
+<script>
+const {useState,useRef}=React;
+const h=React.createElement;
+
+const C={navy:"#0d1b33",navy2:"#1a2744",ora:"#e8650a",ora2:"#c4530a",white:"#ffffff",offwhite:"#f8f7f4",bg:"#f4f2ee",border:"#d8d3cc",gray:"#888",green:"#3a8c5c"};
+const FONTS={arial:"Arial,sans-serif",times:"'Times New Roman',serif",trebuchet:"'Trebuchet MS',sans-serif"};
+
+// ─── TRANSLATIONS (3 languages, output always German) ───
+const T={
+de:{
+  flag:"🇩🇪",name:"Deutsch",sub:"Ich gebe meine Daten auf Deutsch ein",
+  tabs:["👤 Persönliches","💼 Erfahrung","🎓 Ausbildung","⚡ Kenntnisse","✉️ Anschreiben","🎯 Stellenanzeige"],
+  firstName:"Vorname",lastName:"Nachname",
+  nameHint:"Bitte genau wie im Personalausweis oder Reisepass eingeben.",
+  jobTitle:"Berufsbezeichnung",birth:"Geburtsdatum",birthPlace:"Geburtsort",birthFmt:"Format im Lebenslauf: am TT.MM.JJJJ in Ort",
+  nationality:"Staatsangehörigkeit",email:"E-Mail",phone:"Telefon",street:"Straße und Hausnummer",city:"PLZ und Ort",linkedin:"LinkedIn (optional)",
+  photoLabel:"Bewerbungsfoto",photoHint:"📷 Foto hochladen\nJPG / PNG · 3×4 cm",
+  expNum:"Arbeitsstelle №",position:"Position",company:"Unternehmen",fromDate:"Von (MM/JJJJ)",toDate:"Bis (MM/JJJJ)",toPlaceholder:"leer = bis heute",location:"Ort",
+  desc:"Aufgaben und Erfolge (jeder Punkt neue Zeile)",addExp:"+ Arbeitsstelle hinzufügen",
+  eduNum:"Ausbildung №",degree:"Abschluss",school:"Universität / Schule",eduFrom:"Von (Jahr)",eduTo:"Bis (Jahr)",note:"Bemerkung (optional)",addEdu:"+ Ausbildung hinzufügen",
+  skillsLabel:"Fachkenntnisse (Enter nach jedem)",skillPlaceholder:"AutoCAD, SAP, Python…",
+  german:"Deutsch",english:"Englisch",otherLangs:"Weitere Sprachen (optional)",otherLangsPlaceholder:"Französisch B1…",
+  license:"Führerschein",noLicense:"Kein",hobbies:"Hobbys / Interessen",hobbiesPlaceholder:"Sport, Reisen…",
+  anschTitle:"Anschreiben",anschSub:"Daten ausfüllen — Brief wird nach DIN 5008 erstellt.",
+  companyName:"Unternehmen",companyStreet:"Straße (Unternehmen)",companyCity:"PLZ und Ort (Unternehmen)",
+  contactPerson:"Ansprechpartner (optional)",contactPlaceholder:"Frau Müller / Herr Schmidt",
+  applyingFor:"Bewerbung als",motivation:"Motivation und Stärken",
+  motivationPlaceholder:"Warum dieses Unternehmen? Was zeichnet Sie aus?",
+  available:"Frühester Eintrittstermin",availablePlaceholder:"zum nächstmöglichen Zeitpunkt",
+  salary:"Gehaltsvorstellung (optional)",salaryPlaceholder:"55.000 € brutto jährlich",
+  generateAnsch:"✉️ Anschreiben erstellen",generatingAnsch:"Anschreiben wird erstellt…",
+  anschReady:"✅ Anschreiben fertig",regenerate:"🔄 Neu erstellen",
+  jobTabTitle:"Stellenanzeige analysieren",jobTabSub:"Anzeige hochladen — KI passt Lebenslauf und Anschreiben an.",
+  uploadPDF:"📄 PDF hochladen",uploadIMG:"🖼 Bild hochladen",orPasteText:"oder Text einfügen",orLink:"oder Link zur Stelle",
+  linkPlaceholder:"https://jobs.siemens.com/…",analyzeBtn:"🔍 Analysieren & anpassen",analyzing:"Analysiere…",
+  analysisTitle:"Analyseergebnis",clearJob:"Zurücksetzen",
+  ctaBtn:"JETZT HERUNTERLADEN – WORD & PDF",ctaSub:"Lebenslauf + Anschreiben · Word & PDF · 17 € inkl. MwSt.",
+  demoBtn:"Demo laden",outputNote:"🇩🇪 Dokumente auf Deutsch",changeLang:"Sprache ändern",
+  fontTitle:"Schriftart wählen",fontSub:"Die Schrift bestimmt den ersten Eindruck.",
+  fontBtn:"Weiter → Daten eingeben",
+  fonts:[{id:"arial",label:"Arial",sub:"Klassisch und professionell"},{id:"times",label:"Times New Roman",sub:"Traditionell und seriös"},{id:"trebuchet",label:"Trebuchet MS",sub:"Modern und technisch"}]
+},
+ru:{
+  flag:"🇷🇺",name:"Русский",sub:"Я ввожу данные на русском языке",
+  tabs:["👤 Личные","💼 Опыт","🎓 Образование","⚡ Навыки","✉️ Anschreiben","🎯 Вакансия"],
+  firstName:"Vorname (латиница)",lastName:"Nachname (латиница)",
+  nameHint:"⚠️ Vor- und Nachname auf Lateinisch — genau wie im Reisepass.",
+  jobTitle:"Berufsbezeichnung / Должность",birth:"Geburtsdatum / Дата рождения",birthPlace:"Geburtsort / Город рождения",birthFmt:"Format im Lebenslauf: am TT.MM.JJJJ in Ort",
+  nationality:"Staatsangehörigkeit / Гражданство",email:"E-Mail",phone:"Telefon",street:"Straße und Hausnummer / Улица и дом",city:"PLZ und Ort / Индекс и город",linkedin:"LinkedIn (необязательно)",
+  photoLabel:"Bewerbungsfoto / Фото",photoHint:"📷 Foto hochladen\nJPG / PNG · 3×4 cm",
+  expNum:"Arbeitsstelle № / Место работы №",position:"Position / Должность",company:"Unternehmen / Компания",fromDate:"Von / С (ММ/ГГГГ)",toDate:"Bis / По (ММ/ГГГГ)",toPlaceholder:"пусто = по настоящее время",location:"Ort / Город",
+  desc:"Aufgaben und Erfolge — jeder Punkt neue Zeile / каждый пункт с новой строки",addExp:"+ Arbeitsstelle hinzufügen",
+  eduNum:"Ausbildung № / Образование №",degree:"Abschluss / Специальность",school:"Universität / Учебное заведение",eduFrom:"Von / С (Jahr/Год)",eduTo:"Bis / По (Jahr/Год)",note:"Bemerkung / Примечание (необязательно)",addEdu:"+ Ausbildung hinzufügen",
+  skillsLabel:"Fachkenntnisse / Навыки (Enter nach jedem)",skillPlaceholder:"AutoCAD, SAP, Python…",
+  german:"Deutsch / Немецкий",english:"Englisch / Английский",otherLangs:"Weitere Sprachen / Другие языки",otherLangsPlaceholder:"Французский B1…",
+  license:"Führerschein / Водительское удостоверение",noLicense:"Нет / Kein",hobbies:"Hobbys / Хобби",hobbiesPlaceholder:"Спорт, путешествия…",
+  anschTitle:"Anschreiben (сопроводительное письмо)",anschSub:"Заполните данные — письмо будет создано на немецком языке по стандарту DIN 5008.",
+  companyName:"Unternehmen / Компания",companyStreet:"Straße / Улица (Компания)",companyCity:"PLZ und Ort / Индекс и город (Компания)",
+  contactPerson:"Ansprechpartner / Контактное лицо (необязательно)",contactPlaceholder:"Frau Müller / Herr Schmidt",
+  applyingFor:"Bewerbung als / На должность",motivation:"Motivation und Stärken / Мотивация и сильные стороны",
+  motivationPlaceholder:"Почему именно эта компания? Ваши сильные стороны? (можно по-русски)",
+  available:"Frühester Eintrittstermin / Дата начала работы",availablePlaceholder:"zum nächstmöglichen Zeitpunkt",
+  salary:"Gehaltsvorstellung / Желаемая зарплата (необязательно)",salaryPlaceholder:"55.000 € brutto jährlich",
+  generateAnsch:"✉️ Anschreiben erstellen",generatingAnsch:"Anschreiben wird erstellt…",
+  anschReady:"✅ Anschreiben fertig",regenerate:"🔄 Neu erstellen",
+  jobTabTitle:"Stellenanzeige analysieren / Анализ вакансии",jobTabSub:"Загрузите объявление — KI адаптирует Lebenslauf и Anschreiben.",
+  uploadPDF:"📄 PDF hochladen",uploadIMG:"🖼 Bild hochladen",orPasteText:"oder Text einfügen / или вставьте текст",orLink:"oder Link / или ссылка",
+  linkPlaceholder:"https://jobs.siemens.com/…",analyzeBtn:"🔍 Analysieren & anpassen",analyzing:"Analysiere…",
+  analysisTitle:"Analyseergebnis / Результат анализа",clearJob:"Zurücksetzen / Очистить",
+  ctaBtn:"JETZT HERUNTERLADEN – WORD & PDF",ctaSub:"Lebenslauf + Anschreiben · Word & PDF · 17 € inkl. MwSt.",
+  demoBtn:"Demo laden / Демо загрузить",outputNote:"🇩🇪 Dokumente auf Deutsch",changeLang:"Sprache ändern",
+  fontTitle:"Schriftart wählen / Выберите шрифт",fontSub:"Die Schrift bestimmt den ersten Eindruck.",
+  fontBtn:"Weiter → Daten eingeben",
+  fonts:[{id:"arial",label:"Arial",sub:"Klassisch und professionell"},{id:"times",label:"Times New Roman",sub:"Traditionell und seriös"},{id:"trebuchet",label:"Trebuchet MS",sub:"Modern und technisch"}]
+},
+uk:{
+  flag:"🇺🇦",name:"Українська",sub:"Я вводжу дані українською мовою",
+  tabs:["👤 Особисті","💼 Досвід","🎓 Освіта","⚡ Навички","✉️ Anschreiben","🎯 Вакансія"],
+  firstName:"Vorname (латиниця)",lastName:"Nachname (латиниця)",
+  nameHint:"⚠️ Vor- und Nachname auf Lateinisch — genau wie im Reisepass.",
+  jobTitle:"Berufsbezeichnung / Посада",birth:"Geburtsdatum / Дата народження",birthPlace:"Geburtsort / Місто народження",birthFmt:"Format im Lebenslauf: am TT.MM.JJJJ in Ort",
+  nationality:"Staatsangehörigkeit / Громадянство",email:"E-Mail",phone:"Telefon",street:"Straße und Hausnummer / Вулиця і дім",city:"PLZ und Ort / Індекс і місто",linkedin:"LinkedIn (необов'язково)",
+  photoLabel:"Bewerbungsfoto / Фото",photoHint:"📷 Foto hochladen\nJPG / PNG · 3×4 cm",
+  expNum:"Arbeitsstelle № / Місце роботи №",position:"Position / Посада",company:"Unternehmen / Компанія",fromDate:"Von / З (ММ/РРРР)",toDate:"Bis / По (ММ/РРРР)",toPlaceholder:"порожньо = по теперішній час",location:"Ort / Місто",
+  desc:"Aufgaben und Erfolge — jeder Punkt neue Zeile / кожен пункт з нового рядка",addExp:"+ Arbeitsstelle hinzufügen",
+  eduNum:"Ausbildung № / Освіта №",degree:"Abschluss / Спеціальність",school:"Universität / Навчальний заклад",eduFrom:"Von / З (Jahr/Рік)",eduTo:"Bis / По (Jahr/Рік)",note:"Bemerkung / Примітка (необов'язково)",addEdu:"+ Ausbildung hinzufügen",
+  skillsLabel:"Fachkenntnisse / Навички (Enter nach jedem)",skillPlaceholder:"AutoCAD, SAP, Python…",
+  german:"Deutsch / Німецька",english:"Englisch / Англійська",otherLangs:"Weitere Sprachen / Інші мови",otherLangsPlaceholder:"Французька B1…",
+  license:"Führerschein / Водійське посвідчення",noLicense:"Немає / Kein",hobbies:"Hobbys / Хобі",hobbiesPlaceholder:"Спорт, подорожі…",
+  anschTitle:"Anschreiben (супровідний лист)",anschSub:"Заповніть дані — лист буде створено німецькою мовою за стандартом DIN 5008.",
+  companyName:"Unternehmen / Компанія",companyStreet:"Straße / Вулиця (Компанія)",companyCity:"PLZ und Ort / Індекс і місто (Компанія)",
+  contactPerson:"Ansprechpartner / Контактна особа (необов'язково)",contactPlaceholder:"Frau Müller / Herr Schmidt",
+  applyingFor:"Bewerbung als / На посаду",motivation:"Motivation und Stärken / Мотивація та сильні сторони",
+  motivationPlaceholder:"Чому саме ця компанія? Ваші сильні сторони? (можна українською)",
+  available:"Frühester Eintrittstermin / Дата початку роботи",availablePlaceholder:"zum nächstmöglichen Zeitpunkt",
+  salary:"Gehaltsvorstellung / Бажана зарплата (необов'язково)",salaryPlaceholder:"55.000 € brutto jährlich",
+  generateAnsch:"✉️ Anschreiben erstellen",generatingAnsch:"Anschreiben wird erstellt…",
+  anschReady:"✅ Anschreiben fertig",regenerate:"🔄 Neu erstellen",
+  jobTabTitle:"Stellenanzeige analysieren / Аналіз вакансії",jobTabSub:"Завантажте оголошення — KI адаптує Lebenslauf і Anschreiben.",
+  uploadPDF:"📄 PDF hochladen",uploadIMG:"🖼 Bild hochladen",orPasteText:"oder Text einfügen / або вставте текст",orLink:"oder Link / або посилання",
+  linkPlaceholder:"https://jobs.siemens.com/…",analyzeBtn:"🔍 Analysieren & anpassen",analyzing:"Analysiere…",
+  analysisTitle:"Analyseergebnis / Результат аналізу",clearJob:"Zurücksetzen / Очистити",
+  ctaBtn:"JETZT HERUNTERLADEN – WORD & PDF",ctaSub:"Lebenslauf + Anschreiben · Word & PDF · 17 € inkl. MwSt.",
+  demoBtn:"Demo laden / Демо завантажити",outputNote:"🇩🇪 Dokumente auf Deutsch",changeLang:"Sprache ändern",
+  fontTitle:"Schriftart wählen / Оберіть шрифт",fontSub:"Die Schrift bestimmt den ersten Eindruck.",
+  fontBtn:"Weiter → Daten eingeben",
+  fonts:[{id:"arial",label:"Arial",sub:"Klassisch und professionell"},{id:"times",label:"Times New Roman",sub:"Traditionell und seriös"},{id:"trebuchet",label:"Trebuchet MS",sub:"Modern und technisch"}]
+}
+};
+
+// ─── DATA ───
+const EMPTY={firstName:"",lastName:"",jobTitle:"",birth:"",birthPlace:"",nationality:"",email:"",phone:"",street:"",city:"",linkedin:"",experience:[{position:"",company:"",location:"",from:"",to:"",desc:""}],education:[{degree:"",school:"",location:"",from:"",to:"",note:""}],skills:[],germanLevel:"B2",englishLevel:"B1",otherLangs:"",driverLicense:"B",hobbies:"",ansch:{companyName:"",companyStreet:"",companyCity:"",contactPerson:"",applyingFor:"",motivation:"",available:"zum nächstmöglichen Zeitpunkt",salary:""}};
+const DEMO={firstName:"Dmitri",lastName:"Volkov",jobTitle:"Konstruktionsingenieur | Maschinenbau",birth:"15.03.1988",birthPlace:"Jekaterinburg",nationality:"Russisch",email:"dmitri.volkov@gmail.com",phone:"+49 151 234 56789",street:"Schillerstraße 24",city:"80336 München",linkedin:"linkedin.com/in/dmitri-volkov",experience:[{position:"Leitender Konstrukteur",company:"Uralmasch OAO",location:"Jekaterinburg, Russland",from:"2015-03",to:"2023-08",desc:"Führung eines Teams von 12 Ingenieuren\nSenkung der Produktionskosten um 18 %\nEinführung CAD/CAM-System – Entwicklungszeit –30 %\nQualitätsnormen ISO 9001 eingehalten"},{position:"Konstrukteur",company:"Uralmasch OAO",location:"Jekaterinburg, Russland",from:"2010-09",to:"2015-02",desc:"Konstruktion von Maschinenkomponenten mit AutoCAD und SolidWorks\nErstellung technischer Dokumentationen nach DIN-Normen"}],education:[{degree:"M.Sc. Maschinenbau",school:"Ural Federal University (UrFU)",location:"Jekaterinburg",from:"2005",to:"2010",note:"Auszeichnung · Konstruktionstechnik"}],skills:["AutoCAD","SolidWorks","CATIA V5","SAP","MS Project","ISO 9001","3D-Druck"],germanLevel:"B2",englishLevel:"B1",otherLangs:"",driverLicense:"B",hobbies:"3D-Druck, Schach, Wandern",ansch:{companyName:"Siemens AG",companyStreet:"Werner-von-Siemens-Straße 1",companyCity:"80333 München",contactPerson:"",applyingFor:"Konstruktionsingenieur Maschinenbau",motivation:"8 Jahre Erfahrung in Konstruktion komplexer Industrieanlagen. Teamleiter bei Uralmasch – CAD/CAM-Einführung reduzierte Entwicklungszeit um 30 %. Siemens fasziniert durch globale Innovationskraft.",available:"zum nächstmöglichen Zeitpunkt",salary:""}};
+
+// ─── HELPERS ───
+function fmt(v){if(!v)return"heute";const[y,m]=v.split("-");return m+"/"+y;}
+function todayDE(){return new Date().toLocaleDateString("de-DE",{day:"numeric",month:"long",year:"numeric"});}
+function cvSum(cv){const b=cv.birth?(cv.birthPlace?"am "+cv.birth+" in "+cv.birthPlace:"am "+cv.birth):"";return["Name: "+cv.firstName+" "+cv.lastName,"Beruf: "+cv.jobTitle,b&&("Geburt: "+b),"Staatsangehörigkeit: "+cv.nationality,"Erfahrung: "+cv.experience.map(function(ex){return ex.position+" bei "+ex.company+" ("+fmt(ex.from)+"–"+fmt(ex.to)+"): "+ex.desc.split("\n").slice(0,2).join("; ");}).join(" | "),"Ausbildung: "+cv.education.map(function(ed){return ed.degree+", "+ed.school;}).join("; "),"Skills: "+cv.skills.join(", "),"Deutsch: "+cv.germanLevel+", Englisch: "+cv.englishLevel,"Adresse: "+cv.street+", "+cv.city].filter(Boolean).join("\n");}
+
+// ─── API ───
+// ── API endpoint: Netlify Function (API-Key sicher auf dem Server) ──
+const API_ENDPOINT="/.netlify/functions/claude";
+
+async function callClaude(msgs,_unused,extraParams){
+  const body=Object.assign({model:"claude-sonnet-4-20250514",max_tokens:1400,messages:msgs},extraParams||{});
+  const r=await fetch(API_ENDPOINT,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message||"Server-Fehler");
+  return(d.content&&d.content[0]&&d.content[0].text)||"";
+}
+async function genAnschreiben(cv,analysis,apiKey){
+  const a=cv.ansch;
+  let stelleInfo="";
+  if(analysis){
+    stelleInfo="\n\nSTELLENANZEIGE-ANALYSE:\n"+
+      "Position: "+analysis.positionTitle+"\n"+
+      "Unternehmen aus Anzeige: "+analysis.companyName+"\n"+
+      "Wichtige Keywords: "+(analysis.keywords||[]).join(", ")+"\n"+
+      "Pflichtanforderungen: "+(analysis.mustHave||[]).join(", ")+"\n"+
+      "Wunschanforderungen: "+(analysis.niceToHave||[]).join(", ")+"\n"+
+      "Passende Skills des Kandidaten: "+(analysis.suggestedSkills||[]).join(", ")+"\n"+
+      (analysis.adaptedSummary?"Vorgeschlagener Einstieg: "+analysis.adaptedSummary:"")+"\n"+
+      "\nWICHTIG: Baue die Keywords und Pflichtanforderungen natürlich in den Text ein. "+
+      "Zeige konkret, wie der Kandidat die Anforderungen erfüllt.";
+  }
+  const prompt="Du bist ein professioneller Bewerbungsberater. Erstelle ein Anschreiben nach DIN 5008.\n\n"+
+    "KANDIDATENPROFIL:\n"+cvSum(cv)+stelleInfo+
+    "\n\nANSCHREIBEN-DATEN:\n"+
+    "Unternehmen: "+a.companyName+", "+a.companyStreet+", "+a.companyCity+"\n"+
+    "Ansprechpartner: "+(a.contactPerson||"nicht angegeben")+"\n"+
+    "Stelle: "+(analysis?analysis.positionTitle:a.applyingFor)+"\n"+
+    "Motivation des Kandidaten: "+a.motivation+"\n"+
+    "Eintrittstermin: "+a.available+"\n"+
+    (a.salary?"Gehaltsvorstellung: "+a.salary+"\n":"")+
+    "\nREGELN:\n"+
+    "- 'ich' NIEMALS am Satzanfang\n"+
+    "- Keine Floskeln wie 'Hiermit bewerbe ich mich' oder 'Mit großem Interesse'\n"+
+    "- Konkrete Zahlen und Ergebnisse aus dem Kandidatenprofil einbauen\n"+
+    "- Keywords aus der Stellenanzeige natürlich einweben\n"+
+    "- Drei Absätze, ca. 220-260 Wörter gesamt\n"+
+    "- Nur reinen Fließtext — kein JSON, keine Markdown-Zeichen, kein Briefkopf\n"+
+    "- Beginne direkt mit der Anrede: "+(a.contactPerson?"Sehr geehrte/r "+a.contactPerson+",":"Sehr geehrte Damen und Herren,");
+  return await callClaude([{role:"user",content:prompt}],apiKey);
+}
+async function analyzeJob(text,imgB64,imgType,url,cv,apiKey){
+  const jsonSchema='Nur reines JSON, kein Markdown:\n{"companyName":"Firmenname","positionTitle":"Jobtitel","keywords":["kw1","kw2","kw3","kw4","kw5","kw6"],"mustHave":["Pflichtanforderung1","Pflichtanforderung2"],"niceToHave":["Wunschanforderung1"],"matchScore":82,"matchReason":"1-2 konkrete Sätze warum dieser Match-Score","suggestedSkills":["Skill1","Skill2","Skill3"],"adaptedJobTitle":"Angepasster Jobtitel","adaptedSummary":"2-3 Sätze: Wie dieser Kandidat perfekt zur Stelle passt – für Anschreiben-Einstieg","salaryRange":"falls erwähnt, sonst leer"}';
+  const kandidat="\n\nKANDIDATENPROFIL:\n"+cvSum(cv);
+  let msgs,tools=undefined;
+  if(imgB64){
+    msgs=[{role:"user",content:[{type:"image",source:{type:"base64",media_type:imgType,data:imgB64}},{type:"text",text:"Analysiere diese Stellenanzeige gründlich."+kandidat+"\n\n"+jsonSchema}]}];
+  } else if(url){
+    // Use web_search tool so Claude can actually fetch the URL
+    tools=[{"type":"web_search_20250305","name":"web_search"}];
+    msgs=[{role:"user",content:"Rufe diese Stellenanzeige ab und analysiere sie gründlich: "+url+kandidat+"\n\n"+jsonSchema}];
+  } else {
+    msgs=[{role:"user",content:"STELLENANZEIGE:\n"+text+kandidat+"\n\n"+jsonSchema}];
+  }
+  const body=Object.assign({model:"claude-sonnet-4-20250514",max_tokens:2000,messages:msgs},tools?{tools}:{});
+  const r=await fetch(API_ENDPOINT,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message||"Server-Fehler");
+  const raw=(d.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
+  return JSON.parse(raw.replace(/```json|```/g,"").trim());
+}
+
+// ─── CV PREVIEW ───
+function CvPreview(p){
+  const cv=p.cv,ff=FONTS[p.fontId]||FONTS.arial,analysis=p.analysis;
+  const bul=function(t){return(t||"").split("\n").filter(Boolean);};
+  const skills=analysis&&analysis.suggestedSkills&&analysis.suggestedSkills.length?[...new Set([...analysis.suggestedSkills,...cv.skills])].slice(0,12):cv.skills;
+  const bline=cv.birth?(cv.birthPlace?"am "+cv.birth+" in "+cv.birthPlace:"am "+cv.birth):null;
+  function Sec(sp){return h("div",{style:{marginBottom:10}},h("div",{style:{fontWeight:700,fontSize:8,letterSpacing:1.8,color:"#111",textTransform:"uppercase"}},sp.title),h("div",{style:{borderBottom:"1.5px solid #111",marginBottom:6,marginTop:2}}),sp.children);}
+  return h("div",{style:{fontFamily:ff,fontSize:"9.5px",lineHeight:1.55,color:"#111",background:"#fff",padding:"20px 24px",boxShadow:"0 2px 20px rgba(0,0,0,0.13)"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}},
+      h("div",{style:{flex:1,paddingRight:10}},
+        h("div",{style:{fontSize:19,fontWeight:700,letterSpacing:-0.3,marginBottom:2}},(cv.firstName||"Vorname")+" "+(cv.lastName||"Nachname")),
+        h("div",{style:{fontSize:10,color:C.ora,fontWeight:600,marginBottom:6}},(analysis&&analysis.adaptedJobTitle)||cv.jobTitle||"Berufsbezeichnung"),
+        h("div",{style:{fontSize:8.5,color:C.gray,lineHeight:1.9}},
+          cv.email&&h("div",null,"✉ "+cv.email),
+          cv.phone&&h("div",null,"✆ "+cv.phone),
+          (cv.street||cv.city)&&h("div",null,"⌂ "+[cv.street,cv.city].filter(Boolean).join(", ")),
+          cv.linkedin&&h("div",{style:{color:C.ora}},"in "+cv.linkedin),
+          bline&&h("div",null,"Geb. "+bline+(cv.nationality?" · "+cv.nationality:""))
+        )
+      ),
+      h("div",{style:{width:56,height:70,flexShrink:0,border:"1.5px dashed "+C.border,borderRadius:2,background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}},
+        p.photo?h("img",{src:p.photo,alt:"",style:{width:"100%",height:"100%",objectFit:"cover"}}):h("div",{style:{fontSize:20,color:"#ccc"}},"📷")
+      )
+    ),
+    h("div",{style:{borderBottom:"2px solid "+C.ora,marginBottom:10}}),
+    analysis&&h("div",{style:{background:"#fff8f0",border:"1px solid "+C.ora,borderRadius:3,padding:"4px 9px",marginBottom:9,display:"flex",alignItems:"center",gap:7,fontSize:8}},
+      h("span",{style:{color:C.ora2,fontWeight:700}},"🎯 "+analysis.positionTitle),
+      h("span",{style:{marginLeft:"auto",background:C.ora,color:"#fff",padding:"1px 7px",borderRadius:9,fontSize:7.5,fontWeight:700}},analysis.matchScore+"% Match")
+    ),
+    cv.experience&&cv.experience.some(function(x){return x.position||x.company;})&&h(Sec,{title:"BERUFSERFAHRUNG"},
+      cv.experience.filter(function(x){return x.position||x.company;}).map(function(ex,i){return h("div",{key:i,style:{marginBottom:8}},
+        h("div",{style:{display:"flex",justifyContent:"space-between"}},h("strong",{style:{fontSize:9.5}},ex.position),h("span",{style:{color:C.ora,fontSize:8,flexShrink:0,marginLeft:5}},fmt(ex.from)+" – "+fmt(ex.to))),
+        h("div",{style:{color:C.gray,fontSize:8.5,fontStyle:"italic",marginBottom:2}},[ex.company,ex.location].filter(Boolean).join(" · ")),
+        bul(ex.desc).map(function(b,j){return h("div",{key:j,style:{paddingLeft:8,marginBottom:1}},"▸ "+b);})
+      );})
+    ),
+    cv.education&&cv.education.some(function(x){return x.degree||x.school;})&&h(Sec,{title:"AUSBILDUNG"},
+      cv.education.filter(function(x){return x.degree||x.school;}).map(function(ed,i){return h("div",{key:i,style:{marginBottom:7}},
+        h("div",{style:{display:"flex",justifyContent:"space-between"}},h("strong",{style:{fontSize:9.5}},ed.degree),h("span",{style:{color:C.ora,fontSize:8,flexShrink:0,marginLeft:5}},[ed.from,ed.to].filter(Boolean).join(" – "))),
+        h("div",{style:{color:C.gray,fontSize:8.5,fontStyle:"italic",marginBottom:2}},[ed.school,ed.location].filter(Boolean).join(" · ")),
+        ed.note&&h("div",{style:{paddingLeft:8}},"▸ "+ed.note)
+      );})
+    ),
+    skills&&skills.length>0&&h(Sec,{title:"KENNTNISSE"},
+      h("div",{style:{display:"flex",flexWrap:"wrap",gap:4}},skills.map(function(sk,i){const hi=analysis&&analysis.suggestedSkills&&analysis.suggestedSkills.includes(sk);return h("span",{key:i,style:{background:hi?"#fff0e6":C.bg,border:"1px solid "+(hi?C.ora:C.border),borderRadius:2,padding:"2px 6px",fontSize:8.5,fontWeight:hi?700:400}},sk+(hi?" ✓":""));}))
+    ),
+    h(Sec,{title:"SPRACHKENNTNISSE"},
+      [["Russisch","Muttersprache"],cv.germanLevel&&["Deutsch",cv.germanLevel],cv.englishLevel&&["Englisch",cv.englishLevel],cv.otherLangs&&["Weitere",cv.otherLangs]].filter(Boolean).map(function(pair,i,arr){return h("div",{key:i,style:{display:"flex",gap:8,padding:"2px 0",borderBottom:i<arr.length-1?"1px solid #f0ede8":"none"}},h("span",{style:{fontWeight:700,color:C.gray,width:70,fontSize:8.5,flexShrink:0}},pair[0]),h("span",{style:{fontSize:8.5}},pair[1]));})
+    ),
+    (cv.driverLicense||cv.hobbies)&&h(Sec,{title:"SONSTIGES"},
+      cv.driverLicense&&h("div",{style:{display:"flex",gap:8}},h("span",{style:{fontWeight:700,color:C.gray,width:70,fontSize:8.5}},"Führerschein"),h("span",{style:{fontSize:8.5}},"Klasse "+cv.driverLicense)),
+      cv.hobbies&&h("div",{style:{display:"flex",gap:8}},h("span",{style:{fontWeight:700,color:C.gray,width:70,fontSize:8.5}},"Interessen"),h("span",{style:{fontSize:8.5}},cv.hobbies))
+    ),
+    h("div",{style:{borderTop:"1px solid "+C.border,marginTop:16,paddingTop:7}},
+      h("div",{style:{fontSize:8,color:"#aaa",fontStyle:"italic"}},(cv.city||"München").replace(/^\d+\s*/,"")+", "+todayDE()),
+      h("div",{style:{marginTop:20,borderBottom:"1px solid #111",width:100,marginBottom:4}}),
+      h("div",{style:{fontSize:8,color:"#aaa",fontStyle:"italic"}},cv.firstName+" "+cv.lastName)
+    )
+  );
+}
+
+// ─── ANSCHREIBEN PREVIEW ───
+function AnschPreview(p){
+  const ff=FONTS[p.fontId]||FONTS.arial;
+  if(p.loading)return h("div",{style:{background:"#fff",padding:"32px",minHeight:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:18,boxShadow:"0 2px 16px rgba(0,0,0,0.1)"}},
+    h("div",{style:{width:42,height:42,border:"3px solid "+C.border,borderTopColor:C.ora,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}),
+    h("div",{style:{fontSize:13,color:C.gray}},"Anschreiben wird erstellt…")
+  );
+  if(!p.anschText)return h("div",{style:{background:"#fff",padding:"32px",minHeight:300,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 16px rgba(0,0,0,0.1)"}},
+    h("div",{style:{textAlign:"center",color:"#bbb"}},h("div",{style:{fontSize:40,marginBottom:12}},"✉️"),h("div",{style:{fontWeight:700,fontSize:14,color:C.navy2,marginBottom:6}},"Das Anschreiben"),h("div",{style:{fontSize:12,color:C.gray,lineHeight:1.7,maxWidth:240}},"Tab Anschreiben ausfüllen und Erstellen klicken."))
+  );
+  return h("div",{style:{fontFamily:ff,background:"#fff",padding:"20px 24px",boxShadow:"0 2px 16px rgba(0,0,0,0.1)",display:"flex",flexDirection:"column",gap:0}},
+    h("div",{style:{fontSize:9,color:C.ora,fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:6,display:"flex",alignItems:"center",gap:6}},
+      "✏️ Direkt bearbeitbar",
+      h("span",{style:{color:"#bbb",fontWeight:400,letterSpacing:0}},"— klicken zum Bearbeiten")
+    ),
+    h("textarea",{
+      value:p.anschText,
+      onChange:function(ev){p.onChange(ev.target.value);},
+      style:{fontFamily:ff,fontSize:"9.5px",lineHeight:1.85,color:"#111",border:"1.5px solid "+C.border,borderRadius:4,padding:"12px 14px",resize:"vertical",minHeight:420,outline:"none",background:"#fafaf8",transition:"border-color 0.15s"},
+      onFocus:function(ev){ev.target.style.borderColor=C.ora;},
+      onBlur:function(ev){ev.target.style.borderColor=C.border;}
+    }),
+    h("div",{style:{marginTop:12,paddingTop:10,borderTop:"1px solid "+C.border,fontFamily:ff,fontSize:"9.5px"}},
+      h("div",{style:{marginBottom:20,fontStyle:"italic",color:C.gray}},"Mit freundlichen Grüßen"),
+      h("div",{style:{borderBottom:"1px solid #111",width:100,marginBottom:4}}),
+      h("div",{style:{color:"#111"}},(p.cv.firstName||"Vorname")+" "+(p.cv.lastName||"Nachname"))
+    )
+  );
+}
+
+// ─── UI ATOMS ───
+function Lbl(p){return h("div",{style:{fontSize:9.5,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase",color:C.navy2,marginBottom:4,opacity:0.85}},p.c);}
+function Inp(p){const[f,sf]=useState(false);return h("div",null,p.label&&h(Lbl,{c:p.label}),h("input",{type:p.type||"text",value:p.value,onChange:function(ev){p.onChange(ev.target.value);},placeholder:p.placeholder,onFocus:function(){sf(true);},onBlur:function(){sf(false);},style:{width:"100%",padding:"8px 11px",border:"1.5px solid "+(f?C.ora:C.border),borderRadius:5,fontFamily:"inherit",fontSize:12.5,background:C.offwhite,outline:"none",boxSizing:"border-box",color:"#111",transition:"border-color 0.15s"}}));}
+function Txt(p){const[f,sf]=useState(false);return h("div",null,p.label&&h(Lbl,{c:p.label}),h("textarea",{value:p.value,onChange:function(ev){p.onChange(ev.target.value);},placeholder:p.placeholder,rows:p.rows||4,onFocus:function(){sf(true);},onBlur:function(){sf(false);},style:{width:"100%",padding:"8px 11px",border:"1.5px solid "+(f?C.ora:C.border),borderRadius:5,fontFamily:"inherit",fontSize:12.5,background:C.offwhite,outline:"none",boxSizing:"border-box",resize:"vertical",lineHeight:1.6}}));}
+function Row2(p){return h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}},p.children);}
+function Card(p){return h("div",{style:{background:"#fff",border:"1px solid "+C.border,borderRadius:7,padding:13,marginBottom:10,display:"flex",flexDirection:"column",gap:10}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{style:{fontSize:9.5,fontWeight:700,color:C.ora,textTransform:"uppercase",letterSpacing:1}},p.title),p.onRemove&&h("button",{onClick:p.onRemove,style:{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:18,lineHeight:1,padding:"0 2px"}},"×")),p.children);}
+function AddBtn(p){const[hv,sh]=useState(false);return h("button",{onClick:p.onClick,onMouseOver:function(){sh(true);},onMouseOut:function(){sh(false);},style:{width:"100%",padding:"9px",border:"1.5px dashed "+(hv?C.ora:C.border),borderRadius:7,background:"none",fontFamily:"inherit",fontSize:12.5,fontWeight:600,color:hv?C.ora:"#bbb",cursor:"pointer",transition:"all 0.15s"}},p.children);}
+function LvlBtns(p){const lvls=["A1–A2","B1–B2","C1–C2","Muttersprache"];return h("div",null,h(Lbl,{c:p.label}),h("div",{style:{display:"flex",gap:7}},lvls.map(function(l){const a=p.value===l||p.value===l.split("–")[0];return h("button",{key:l,onClick:function(){p.onChange(l.split("–")[0].trim());},style:{flex:1,padding:"7px 2px",borderRadius:5,cursor:"pointer",fontSize:10.5,fontWeight:600,fontFamily:"inherit",border:"1.5px solid "+(a?C.ora:C.border),background:a?C.ora:C.offwhite,color:a?C.white:C.gray,transition:"all 0.15s"}},l);})));}
+
+// ─── NAVBAR (shared) ───
+function Navbar(p){
+  return h("nav",{style:{background:C.navy2,padding:"0 24px",height:54,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}},
+    h("div",{style:{display:"flex",alignItems:"center",gap:3}},
+      h("span",{style:{fontWeight:900,fontSize:20,color:C.white}},"BUREAU"),
+      h("span",{style:{fontWeight:900,fontSize:20,color:C.ora,fontStyle:"italic"}},"lingo"),
+      h("span",{style:{fontSize:10,color:"rgba(255,255,255,0.3)",marginLeft:2}},".de")
+    ),
+    p.right
+  );
+}
+
+// ─── MAIN APP ───
+function BureauLingo(){
+  const[screen,setScreen]=useState("langpick");
+  const[lang,setLang]=useState(null);
+  const[font,setFont]=useState("arial");
+  const[cv,setCv]=useState(EMPTY);
+  const[photo,setPhoto]=useState(null);
+  const[tab,setTab]=useState(0);
+  const[side,setSide]=useState("cv");
+  const[anschText,setAnschText]=useState("");
+  const[anschLoad,setAnschLoad]=useState(false);
+  const[anschErr,setAnschErr]=useState(null);
+  const[analysis,setAnalysis]=useState(null);
+  const[jobText,setJobText]=useState("");
+  const[jobLink,setJobLink]=useState("");
+  const[jobImgB64,setJobImgB64]=useState(null);
+  const[jobImgType,setJobImgType]=useState(null);
+  const[jobLoad,setJobLoad]=useState(false);
+  const[jobErr,setJobErr]=useState(null);
+  const[skillInput,setSkillInput]=useState("");
+  const[dlState,setDlState]=useState(null);
+  const[dlLinks,setDlLinks]=useState({});
+  const photoRef=useRef(),pdfRef=useRef(),imgRef=useRef();
+
+  const t=lang?T[lang]:T.de;
+  const upd=function(k,v){setCv(function(d){return Object.assign({},d,{[k]:v});});};
+  const updE=function(i,k,v){setCv(function(d){const a=d.experience.map(function(x,j){return j===i?Object.assign({},x,{[k]:v}):x;});return Object.assign({},d,{experience:a});});};
+  const updEd=function(i,k,v){setCv(function(d){const a=d.education.map(function(x,j){return j===i?Object.assign({},x,{[k]:v}):x;});return Object.assign({},d,{education:a});});};
+  const updA=function(k,v){setCv(function(d){return Object.assign({},d,{ansch:Object.assign({},d.ansch,{[k]:v})});});};
+  const addSkill=function(ev){if(ev.key==="Enter"&&skillInput.trim()){upd("skills",[...cv.skills,skillInput.trim()]);setSkillInput("");}};
+  const handlePhoto=function(ev){const f=ev.target.files[0];if(f){const r=new FileReader();r.onload=function(x){setPhoto(x.target.result);};r.readAsDataURL(f);}};
+  const handleJobFile=function(ev,type){const f=ev.target.files[0];if(!f)return;setJobErr(null);const r=new FileReader();if(type==="img"){r.onload=function(x){setJobImgB64(x.target.result.split(",")[1]);setJobImgType(f.type);setJobText("");};r.readAsDataURL(f);}else{r.onload=function(x){setJobText(x.target.result.substring(0,4000));setJobImgB64(null);};r.readAsText(f);}};
+  const doAnsch=async function(){setAnschLoad(true);setAnschErr(null);setAnschText("");setSide("ansch");try{const txt=await genAnschreiben(cv,analysis,apiKey);setAnschText(txt);}catch(err){setAnschErr("Fehler: "+err.message);}finally{setAnschLoad(false);};};
+  const doDemo=async function(){setCv(DEMO);setAnschText("");setAnalysis(null);setPhoto(null);setTab(4);setSide("ansch");setAnschLoad(true);setAnschErr(null);try{const txt=await genAnschreiben(DEMO,null,apiKey);setAnschText(txt);}catch(err){setAnschErr("Fehler: "+err.message);}finally{setAnschLoad(false);};};
+  const doJob=async function(){
+  const inp=jobLink||jobText||jobImgB64;
+  if(!inp){setJobErr("Bitte Datei hochladen, Text einfügen oder Link eingeben.");return;}
+  setJobLoad(true);setJobErr(null);setAnalysis(null);
+  try{
+    const res=await analyzeJob(
+      jobImgB64?null:jobText,
+      jobImgB64,jobImgType,
+      jobLink||null,
+      cv,apiKey
+    );
+    setAnalysis(res);
+    // Auto-switch to Lebenslauf preview to show changes
+    setSide("cv");
+  }catch(err){setJobErr("Fehler beim Analysieren: "+err.message);}
+  finally{setJobLoad(false);}
+};
+  const fontLabel=(t.fonts.find(function(f){return f.id===font;})||{label:font}).label;
+
+  // ── SCREEN: LANGUAGE PICKER ──
+  if(screen==="langpick")return h("div",{style:{background:C.navy,minHeight:"100vh",display:"flex",flexDirection:"column",fontFamily:"'Helvetica Neue',Arial,sans-serif"}},
+    h(Navbar,{right:h("button",{onClick:function(){setScreen("landing");},style:{background:"none",border:"1px solid rgba(255,255,255,0.2)",color:"rgba(255,255,255,0.5)",borderRadius:4,padding:"6px 14px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}},"Zur Startseite")}),
+    h("div",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"48px 24px",textAlign:"center"}},
+      h("div",{style:{fontSize:11,letterSpacing:3,textTransform:"uppercase",color:C.ora,fontWeight:700,marginBottom:24}},"BEWERBUNGSASSISTENT FÜR DEUTSCHLAND"),
+      h("h2",{style:{fontSize:"clamp(22px,4vw,36px)",fontWeight:900,color:C.white,marginBottom:10,lineHeight:1.2}},"In welcher Sprache\nmöchten Sie arbeiten?"),
+      h("p",{style:{color:"rgba(255,255,255,0.45)",fontSize:14,marginBottom:40,maxWidth:440,lineHeight:1.7}},"Wählen Sie die Sprache, in der Sie Ihre Daten eingeben.\nDer Lebenslauf und das Anschreiben werden immer ",h("strong",{style:{color:C.white}},"auf Deutsch")," erstellt."),
+      h("div",{style:{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}},
+        ["de","ru","uk"].map(function(l){return h("button",{key:l,
+          onClick:function(){setLang(l);setScreen("font");},
+          style:{padding:"24px 32px",borderRadius:12,cursor:"pointer",textAlign:"center",border:"2px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.04)",display:"flex",flexDirection:"column",alignItems:"center",gap:10,fontFamily:"inherit",transition:"all 0.2s",minWidth:180},
+          onMouseOver:function(ev){ev.currentTarget.style.borderColor=C.ora;ev.currentTarget.style.background="rgba(232,101,10,0.1)";},
+          onMouseOut:function(ev){ev.currentTarget.style.borderColor="rgba(255,255,255,0.1)";ev.currentTarget.style.background="rgba(255,255,255,0.04)";}},
+          h("div",{style:{fontSize:46}},T[l].flag),
+          h("div",{style:{fontSize:17,fontWeight:700,color:C.white,marginBottom:2}},T[l].name),
+          h("div",{style:{fontSize:12,color:"rgba(255,255,255,0.35)",lineHeight:1.5,maxWidth:160}},T[l].sub)
+        );})
+      ),
+      h("div",{style:{marginTop:40,display:"flex",gap:24,color:"rgba(255,255,255,0.2)",fontSize:12,flexWrap:"wrap",justifyContent:"center"}},"✓ DIN 5008  ✓ KI-Optimierung  ✓ Word & PDF  ",h("span",{style:{color:C.ora,fontWeight:600}},"✓ 17 € inkl. MwSt."))
+    )
+  );
+
+  // ── SCREEN: FONT ──
+  if(screen==="font")return h("div",{style:{background:C.navy,minHeight:"100vh",display:"flex",flexDirection:"column",fontFamily:"'Helvetica Neue',Arial,sans-serif"}},
+    h(Navbar,{right:h("div",{style:{display:"flex",gap:8,alignItems:"center"}},
+      h("span",{style:{fontSize:12,color:"rgba(255,255,255,0.4)"}},(lang?T[lang].flag+" "+T[lang].name:"")),
+      h("button",{onClick:function(){setScreen("langpick");},style:{background:"none",border:"1px solid rgba(255,255,255,0.2)",color:"rgba(255,255,255,0.5)",borderRadius:4,padding:"5px 12px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}},t.changeLang)
+    )}),
+    h("div",{style:{flex:1,display:"flex",justifyContent:"center",padding:"40px 24px"}},
+      h("div",{style:{width:"100%",maxWidth:500}},
+        h("div",{style:{color:C.ora,fontSize:10,letterSpacing:3,textTransform:"uppercase",marginBottom:10}},(lang?T[lang].flag:"")+" Schritt 1 von 2"),
+        h("h2",{style:{fontSize:26,color:C.white,fontWeight:700,marginBottom:6,fontFamily:"inherit"}},t.fontTitle),
+        h("p",{style:{color:"rgba(255,255,255,0.45)",fontSize:13,marginBottom:22}},t.fontSub),
+        h("div",{style:{display:"flex",flexDirection:"column",gap:8}},
+          t.fonts.map(function(f){const sel=font===f.id;return h("button",{key:f.id,onClick:function(){setFont(f.id);},
+            style:{padding:"12px 15px",borderRadius:9,cursor:"pointer",textAlign:"left",border:"2px solid "+(sel?C.ora:"rgba(255,255,255,0.08)"),background:sel?"rgba(232,101,10,0.12)":"rgba(255,255,255,0.04)",display:"flex",alignItems:"center",gap:13,fontFamily:"inherit",transition:"all 0.15s"},
+            onMouseOver:function(ev){if(!sel)ev.currentTarget.style.borderColor="rgba(255,255,255,0.2)";},
+            onMouseOut:function(ev){if(!sel)ev.currentTarget.style.borderColor="rgba(255,255,255,0.08)";}},
+            h("div",{style:{width:34,height:34,borderRadius:5,background:sel?C.ora:"rgba(255,255,255,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},h("span",{style:{fontFamily:FONTS[f.id],fontWeight:700,fontSize:17,color:C.white}},"A")),
+            h("div",{style:{flex:1}},h("div",{style:{fontFamily:FONTS[f.id],fontSize:14,color:C.white,fontWeight:600}},f.label),h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:2}},f.sub)),
+            sel&&h("span",{style:{color:C.ora,fontSize:18}},"✓")
+          );})
+        ),
+        h("button",{onClick:function(){setScreen("form");},
+          style:{width:"100%",marginTop:20,padding:"14px",background:C.ora,color:C.white,border:"none",borderRadius:7,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",transition:"background 0.15s"},
+          onMouseOver:function(ev){ev.currentTarget.style.background=C.ora2;},
+          onMouseOut:function(ev){ev.currentTarget.style.background=C.ora;}},
+          t.fontBtn)
+      )
+    )
+  );
+
+  // ── SCREEN: LANDING ──
+  if(screen==="landing")return h("div",{style:{fontFamily:"'Helvetica Neue',Arial,sans-serif"}},
+    h(Navbar,{right:h("button",{onClick:function(){setScreen("langpick");},style:{background:C.ora,color:C.white,border:"none",borderRadius:4,padding:"10px 22px",fontSize:12,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer"},onMouseOver:function(ev){ev.currentTarget.style.background=C.ora2;},onMouseOut:function(ev){ev.currentTarget.style.background=C.ora;}},"JETZT STARTEN")}),
+    h("div",{style:{background:"linear-gradient(160deg,"+C.navy2+" 0%,"+C.navy+" 100%)",padding:"90px 32px 80px",textAlign:"center",minHeight:520,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},
+      h("div",{style:{fontSize:11,letterSpacing:3,textTransform:"uppercase",color:C.ora,fontWeight:700,marginBottom:24}},"BEWERBUNGSASSISTENT FÜR DEUTSCHLAND"),
+      h("h1",{style:{fontSize:"clamp(36px,6vw,66px)",fontWeight:900,lineHeight:1.1,marginBottom:28,maxWidth:700}},
+        h("span",{style:{color:C.white}},"Ihre Bewerbung."),h("br"),h("span",{style:{color:C.ora,fontStyle:"italic"}},"Professionell."),h("br"),h("span",{style:{color:C.white}},"Auf Deutsch.")
+      ),
+      h("p",{style:{color:"rgba(255,255,255,0.7)",fontSize:17,marginBottom:12,maxWidth:580,lineHeight:1.7}},"Geben Sie Ihre Daten auf ",h("strong",{style:{color:C.white}},"Deutsch, Russisch oder Ukrainisch")," ein – wir erstellen Lebenslauf und Anschreiben nach ",h("strong",{style:{color:C.white}},"DIN 5008")," als Word-Dokument und PDF."),
+      h("div",{style:{color:"rgba(255,255,255,0.4)",fontSize:14,marginBottom:36}},"Einmalig · Sofort-Download · Word & PDF · 17 € inkl. MwSt."),
+      h("button",{onClick:function(){setScreen("langpick");},style:{background:C.ora,color:C.white,border:"none",borderRadius:5,padding:"17px 48px",fontSize:13,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",boxShadow:"0 4px 24px rgba(232,101,10,0.45)"},onMouseOver:function(ev){ev.currentTarget.style.background=C.ora2;},onMouseOut:function(ev){ev.currentTarget.style.background=C.ora;}},"JETZT BEWERBUNG ERSTELLEN →")
+    ),
+    h("div",{style:{background:C.navy2,padding:"64px 32px"}},
+      h("h2",{style:{textAlign:"center",fontSize:"clamp(22px,3.5vw,34px)",color:C.white,fontWeight:700,marginBottom:48}},"So funktioniert ",h("span",{style:{color:C.ora}},"BUREAUlingo")),
+      h("div",{style:{display:"flex",gap:20,maxWidth:960,margin:"0 auto",flexWrap:"wrap",justifyContent:"center"}},
+        [{icon:"🌐",title:"Mehrsprachig",text:"Eingabe auf Deutsch, Russisch oder Ukrainisch – Ausgabe immer auf professionellem Deutsch."},
+         {icon:"⚡",title:"KI-gestützt",text:"Die KI analysiert Ihre Daten und die Stellenanzeige und erstellt individuell angepasste Unterlagen."},
+         {icon:"📄",title:"DIN 5008",text:"Lebenslauf und Anschreiben entsprechen der deutschen Norm – als Word-Dokument und PDF."}
+        ].map(function(f,i){return h("div",{key:i,style:{flex:"1 1 260px",background:"rgba(255,255,255,0.05)",borderRadius:12,padding:32,textAlign:"center",border:"1px solid rgba(255,255,255,0.08)"}},
+          h("div",{style:{width:64,height:64,background:"rgba(232,101,10,0.18)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",fontSize:26}},f.icon),
+          h("div",{style:{fontWeight:700,fontSize:17,color:C.white,marginBottom:10}},f.title),
+          h("div",{style:{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.7}},f.text)
+        );})
+      )
+    ),
+    h("div",{style:{background:C.navy,padding:"64px 32px"}},
+      h("h2",{style:{textAlign:"center",fontSize:"clamp(20px,3vw,32px)",color:C.white,fontWeight:700,marginBottom:48}},"In ",h("span",{style:{color:C.ora,fontStyle:"italic"}},"4 Schritten")," zur fertigen Bewerbung"),
+      h("div",{style:{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}},
+        [["Sprache wählen","Deutsch, Russisch oder Ukrainisch — die Sprache, in der Sie Ihre Daten eingeben."],
+         ["Schriftart & Daten","Wunschschrift auswählen und Lebenslauf-Daten ausfüllen."],
+         ["Anschreiben erstellen","KI erstellt ein professionelles Anschreiben auf Deutsch nach DIN 5008."],
+         ["Word & PDF herunterladen","Beide Dokumente sofort als Word-Datei und PDF. 17 € inkl. MwSt."]
+        ].map(function(step,i){return h("div",{key:i,style:{display:"flex",gap:16,alignItems:"flex-start",background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"16px 20px",border:"1px solid rgba(255,255,255,0.07)"}},
+          h("div",{style:{width:34,height:34,background:C.ora,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:15,color:C.white,flexShrink:0}},i+1),
+          h("div",null,h("div",{style:{fontWeight:700,fontSize:14,color:C.white,marginBottom:3}},step[0]),h("div",{style:{fontSize:13,color:"rgba(255,255,255,0.45)",lineHeight:1.6}},step[1]))
+        );})
+      )
+    ),
+    h("div",{style:{background:C.ora,padding:"52px 32px",textAlign:"center"}},
+      h("h2",{style:{fontSize:"clamp(20px,3vw,32px)",color:C.white,fontWeight:700,marginBottom:10}},"Ihre professionelle Bewerbung – in 5 Minuten fertig"),
+      h("p",{style:{color:"rgba(255,255,255,0.85)",fontSize:15,marginBottom:28}},"Lebenslauf + Anschreiben · Word & PDF · Einmalig 17 € inkl. MwSt."),
+      h("button",{onClick:function(){setScreen("langpick");},style:{background:C.white,color:C.ora,border:"none",borderRadius:5,padding:"14px 42px",fontSize:13,fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer"}},"JETZT STARTEN →")
+    ),
+    h("div",{style:{background:C.navy2,padding:"20px 32px",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.07)"}},
+      h("div",{style:{color:"rgba(255,255,255,0.3)",fontSize:12}},"© 2026 BUREAUlingo.de · Ein Angebot von ",h("a",{href:"https://benz-reichenauer.de",style:{color:C.ora,textDecoration:"none"}},"benz-reichenauer.de"))
+    )
+  );
+
+  // ── SCREEN: FORM ──
+  return h("div",{style:{display:"flex",flexDirection:"column",height:"100vh",overflow:"hidden",fontFamily:"'Helvetica Neue',Arial,sans-serif"}},
+    h(Navbar,{right:h("div",{style:{display:"flex",gap:7,alignItems:"center"}},
+      h("span",{style:{background:"rgba(255,255,255,0.08)",borderRadius:12,padding:"4px 10px",fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:600}},(lang?T[lang].flag+" "+T[lang].name:"")),
+      h("button",{onClick:function(){setScreen("langpick");},style:{background:"none",border:"1px solid rgba(255,255,255,0.2)",color:"rgba(255,255,255,0.45)",borderRadius:4,padding:"5px 10px",fontSize:10.5,cursor:"pointer",fontFamily:"inherit"}},t.changeLang),
+      h("button",{onClick:doDemo,style:{background:"rgba(232,101,10,0.15)",border:"1px solid "+C.ora,color:C.ora,borderRadius:4,padding:"5px 10px",fontSize:10.5,cursor:"pointer",fontFamily:"inherit",fontWeight:600}},t.demoBtn),
+      h("button",{onClick:function(){setScreen("font");},style:{background:"none",border:"1px solid rgba(255,255,255,0.15)",color:"rgba(255,255,255,0.4)",borderRadius:4,padding:"5px 10px",fontSize:10.5,cursor:"pointer",fontFamily:"inherit"}},t.changeFontBtn||"Schrift:"," "+fontLabel)
+    )}),
+    h("div",{style:{display:"flex",flex:1,overflow:"hidden"}},
+      h("div",{style:{width:"50%",display:"flex",flexDirection:"column",borderRight:"1px solid "+C.border,background:C.offwhite,overflow:"hidden"}},
+        h("div",{style:{display:"flex",borderBottom:"1px solid "+C.border,background:"#fff",flexShrink:0,overflowX:"auto"}},
+          t.tabs.map(function(label,i){return h("button",{key:i,onClick:function(){setTab(i);},style:{flexShrink:0,padding:"10px 7px",border:"none",background:"none",cursor:"pointer",fontSize:9.5,fontWeight:600,color:tab===i?C.navy:"#bbb",borderBottom:tab===i?"2.5px solid "+C.ora:"2.5px solid transparent",fontFamily:"inherit",whiteSpace:"nowrap",position:"relative"}},
+            label,
+            i===4&&anschText&&h("span",{style:{position:"absolute",top:4,right:2,width:6,height:6,background:C.green,borderRadius:"50%"}}),
+            i===5&&analysis&&h("span",{style:{position:"absolute",top:4,right:2,width:6,height:6,background:C.green,borderRadius:"50%"}})
+          );})
+        ),
+        h("div",{style:{flex:1,overflow:"auto",padding:16,display:"flex",flexDirection:"column",gap:11}},
+          tab===0&&h(React.Fragment,null,
+            h("div",{style:{background:"#fff8f0",border:"1.5px solid "+C.ora,borderRadius:6,padding:"9px 12px",fontSize:11.5,color:"#7a2d00",display:"flex",alignItems:"flex-start",gap:8,lineHeight:1.5}},h("span",{style:{flexShrink:0}},"⚠️"),h("span",null,t.nameHint)),
+            h(Row2,null,h(Inp,{label:t.firstName,value:cv.firstName,onChange:function(v){upd("firstName",v);}}),h(Inp,{label:t.lastName,value:cv.lastName,onChange:function(v){upd("lastName",v);}})),
+            h(Inp,{label:t.jobTitle,value:cv.jobTitle,onChange:function(v){upd("jobTitle",v);}}),
+            h("div",null,
+              h(Row2,null,h(Inp,{label:t.birth,value:cv.birth,onChange:function(v){upd("birth",v);},placeholder:"15.03.1988"}),h(Inp,{label:t.birthPlace,value:cv.birthPlace,onChange:function(v){upd("birthPlace",v);},placeholder:"München"})),
+              h("div",{style:{fontSize:10,color:C.gray,marginTop:3,paddingLeft:2,fontStyle:"italic"}},t.birthFmt)
+            ),
+            h(Inp,{label:t.nationality,value:cv.nationality,onChange:function(v){upd("nationality",v);}}),
+            h(Row2,null,h(Inp,{label:t.email,value:cv.email,onChange:function(v){upd("email",v);}}),h(Inp,{label:t.phone,value:cv.phone,onChange:function(v){upd("phone",v);}})),
+            h(Row2,null,h(Inp,{label:t.street,value:cv.street,onChange:function(v){upd("street",v);}}),h(Inp,{label:t.city,value:cv.city,onChange:function(v){upd("city",v);}})),
+            h(Inp,{label:t.linkedin,value:cv.linkedin,onChange:function(v){upd("linkedin",v);}}),
+            h("div",null,h(Lbl,{c:t.photoLabel}),h("div",{onClick:function(){photoRef.current.click();},style:{border:"2px dashed "+C.border,borderRadius:7,padding:16,textAlign:"center",cursor:"pointer",background:C.offwhite},onMouseOver:function(ev){ev.currentTarget.style.borderColor=C.ora;},onMouseOut:function(ev){ev.currentTarget.style.borderColor=C.border;}},photo?h("img",{src:photo,alt:"",style:{height:65,borderRadius:3,objectFit:"cover"}}):h("div",{style:{color:"#bbb",fontSize:12,whiteSpace:"pre-line"}},t.photoHint)),h("input",{ref:photoRef,type:"file",accept:"image/*",onChange:handlePhoto,style:{display:"none"}}))
+          ),
+          tab===1&&h(React.Fragment,null,
+            cv.experience.map(function(ex,i){return h(Card,{key:i,title:t.expNum+(i+1),onRemove:i>0?function(){upd("experience",cv.experience.filter(function(_,j){return j!==i;}));}:null},
+              h(Row2,null,h(Inp,{label:t.position,value:ex.position,onChange:function(v){updE(i,"position",v);}}),h(Inp,{label:t.company,value:ex.company,onChange:function(v){updE(i,"company",v);}})),
+              h(Row2,null,h(Inp,{label:t.fromDate,type:"month",value:ex.from,onChange:function(v){updE(i,"from",v);}}),h(Inp,{label:t.toDate,type:"month",value:ex.to,onChange:function(v){updE(i,"to",v);},placeholder:t.toPlaceholder})),
+              h(Inp,{label:t.location,value:ex.location,onChange:function(v){updE(i,"location",v);}}),
+              h(Txt,{label:t.desc,value:ex.desc,onChange:function(v){updE(i,"desc",v);},rows:4})
+            );}),
+            h(AddBtn,{onClick:function(){upd("experience",[...cv.experience,{position:"",company:"",location:"",from:"",to:"",desc:""}]);}},t.addExp)
+          ),
+          tab===2&&h(React.Fragment,null,
+            cv.education.map(function(ed,i){return h(Card,{key:i,title:t.eduNum+(i+1),onRemove:i>0?function(){upd("education",cv.education.filter(function(_,j){return j!==i;}));}:null},
+              h(Inp,{label:t.degree,value:ed.degree,onChange:function(v){updEd(i,"degree",v);}}),
+              h(Row2,null,h(Inp,{label:t.school,value:ed.school,onChange:function(v){updEd(i,"school",v);}}),h(Inp,{label:t.location,value:ed.location,onChange:function(v){updEd(i,"location",v);}})),
+              h(Row2,null,h(Inp,{label:t.eduFrom,value:ed.from,onChange:function(v){updEd(i,"from",v);},placeholder:"2005"}),h(Inp,{label:t.eduTo,value:ed.to,onChange:function(v){updEd(i,"to",v);},placeholder:"2010"})),
+              h(Inp,{label:t.note,value:ed.note,onChange:function(v){updEd(i,"note",v);}})
+            );}),
+            h(AddBtn,{onClick:function(){upd("education",[...cv.education,{degree:"",school:"",location:"",from:"",to:"",note:""}]);}},t.addEdu)
+          ),
+          tab===3&&h(React.Fragment,null,
+            h("div",null,h(Lbl,{c:t.skillsLabel}),h("div",{style:{border:"1.5px solid "+C.border,borderRadius:7,padding:"7px 9px",background:C.offwhite,display:"flex",flexWrap:"wrap",gap:5,minHeight:42}},
+              cv.skills.map(function(sk,i){return h("span",{key:i,style:{background:C.navy,color:C.white,padding:"3px 9px",borderRadius:16,fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:4}},sk,h("span",{onClick:function(){upd("skills",cv.skills.filter(function(_,j){return j!==i;}));},style:{cursor:"pointer",opacity:0.5,fontSize:12,lineHeight:1}},"×"));}),
+              h("input",{value:skillInput,onChange:function(ev){setSkillInput(ev.target.value);},onKeyDown:addSkill,placeholder:t.skillPlaceholder,style:{border:"none",background:"none",outline:"none",fontSize:12,fontFamily:"inherit",minWidth:90,flex:1}})
+            )),
+            h(LvlBtns,{label:t.german,value:cv.germanLevel,onChange:function(v){upd("germanLevel",v);}}),
+            h(LvlBtns,{label:t.english,value:cv.englishLevel,onChange:function(v){upd("englishLevel",v);}}),
+            h(Inp,{label:t.otherLangs,value:cv.otherLangs,onChange:function(v){upd("otherLangs",v);},placeholder:t.otherLangsPlaceholder}),
+            h(Row2,null,
+              h("div",null,h(Lbl,{c:t.license}),h("select",{value:cv.driverLicense,onChange:function(ev){upd("driverLicense",ev.target.value);},style:{width:"100%",padding:"8px 11px",border:"1.5px solid "+C.border,borderRadius:5,fontFamily:"inherit",fontSize:12.5,background:C.offwhite,outline:"none"}},h("option",{value:""},t.noLicense),h("option",{value:"B"},"Klasse B"),h("option",{value:"BE"},"Klasse BE"),h("option",{value:"C"},"Klasse C"),h("option",{value:"A"},"Klasse A"))),
+              h(Inp,{label:t.hobbies,value:cv.hobbies,onChange:function(v){upd("hobbies",v);},placeholder:t.hobbiesPlaceholder})
+            )
+          ),
+          tab===4&&h(React.Fragment,null,
+            h("div",{style:{background:C.navy,borderRadius:7,padding:14,color:C.white}},h("div",{style:{fontSize:13,fontWeight:700,marginBottom:3}},t.anschTitle),h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.5}},t.anschSub)),
+            h(Row2,null,h(Inp,{label:t.companyName,value:cv.ansch.companyName,onChange:function(v){updA("companyName",v);}}),h(Inp,{label:t.contactPerson,value:cv.ansch.contactPerson,onChange:function(v){updA("contactPerson",v);},placeholder:t.contactPlaceholder})),
+            h(Row2,null,h(Inp,{label:t.companyStreet,value:cv.ansch.companyStreet,onChange:function(v){updA("companyStreet",v);}}),h(Inp,{label:t.companyCity,value:cv.ansch.companyCity,onChange:function(v){updA("companyCity",v);}})),
+            h(Inp,{label:t.applyingFor,value:cv.ansch.applyingFor,onChange:function(v){updA("applyingFor",v);}}),
+            h(Txt,{label:t.motivation,value:cv.ansch.motivation,onChange:function(v){updA("motivation",v);},placeholder:t.motivationPlaceholder,rows:5}),
+            h(Row2,null,h(Inp,{label:t.available,value:cv.ansch.available,onChange:function(v){updA("available",v);},placeholder:t.availablePlaceholder}),h(Inp,{label:t.salary,value:cv.ansch.salary,onChange:function(v){updA("salary",v);},placeholder:t.salaryPlaceholder})),
+            anschErr&&h("div",{style:{background:"#fff0f0",border:"1px solid #fca5a5",borderRadius:5,padding:"9px 12px",fontSize:11.5,color:"#dc2626"}},anschErr),
+            h("button",{onClick:doAnsch,disabled:anschLoad,style:{padding:"12px",background:anschLoad?"#999":C.ora,color:C.white,border:"none",borderRadius:7,fontSize:12.5,fontWeight:700,cursor:anschLoad?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:9,fontFamily:"inherit"},onMouseOver:function(ev){if(!anschLoad)ev.currentTarget.style.background=C.ora2;},onMouseOut:function(ev){if(!anschLoad)ev.currentTarget.style.background=C.ora;}},anschLoad?h(React.Fragment,null,h("div",{style:{width:14,height:14,border:"2px solid rgba(255,255,255,0.4)",borderTopColor:C.white,borderRadius:"50%",animation:"spin 0.7s linear infinite"}}),t.generatingAnsch):(anschText?t.regenerate:t.generateAnsch)),
+            anschText&&h("div",{style:{background:"#f0f9f0",border:"1px solid "+C.green,borderRadius:5,padding:"9px 12px",fontSize:11.5,color:"#1a5c3a",fontWeight:600,display:"flex",alignItems:"center",gap:8}},t.anschReady,h("button",{onClick:function(){setSide("ansch");},style:{marginLeft:"auto",background:"none",border:"1px solid "+C.green,color:"#1a5c3a",borderRadius:4,padding:"3px 9px",fontSize:10.5,cursor:"pointer",fontFamily:"inherit"}},"Vorschau →"))
+          ),
+          tab===5&&h(React.Fragment,null,
+            h("div",{style:{background:C.navy,borderRadius:7,padding:14,color:C.white,marginBottom:2}},
+              h("div",{style:{fontSize:13,fontWeight:700,marginBottom:3}},t.jobTabTitle),
+              h("div",{style:{fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.5}},t.jobTabSub)
+            ),
+            // Upload buttons
+            !analysis&&h(React.Fragment,null,
+              h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}},
+                h("button",{onClick:function(){pdfRef.current.click();},
+                  style:{padding:"14px 8px",border:"2px dashed "+(jobImgB64?"#999":C.border),borderRadius:7,background:jobImgB64?"#f8f8f8":"transparent",cursor:"pointer",textAlign:"center",fontFamily:"inherit"},
+                  onMouseOver:function(ev){ev.currentTarget.style.borderColor=C.ora;},
+                  onMouseOut:function(ev){ev.currentTarget.style.borderColor=jobImgB64?"#999":C.border;}},
+                  h("div",{style:{fontSize:22,marginBottom:4}},"📄"),
+                  h("div",{style:{fontSize:11,fontWeight:600,color:C.gray}},"PDF hochladen"),
+                  h("div",{style:{fontSize:9.5,color:"#bbb",marginTop:2}},"Stellenanzeige als PDF")
+                ),
+                h("button",{onClick:function(){imgRef.current.click();},
+                  style:{padding:"14px 8px",border:"2px dashed "+(jobImgB64?C.ora:C.border),borderRadius:7,background:jobImgB64?"#fff8f0":"transparent",cursor:"pointer",textAlign:"center",fontFamily:"inherit"},
+                  onMouseOver:function(ev){ev.currentTarget.style.borderColor=C.ora;},
+                  onMouseOut:function(ev){ev.currentTarget.style.borderColor=jobImgB64?C.ora:C.border;}},
+                  h("div",{style:{fontSize:22,marginBottom:4}},jobImgB64?"✅":"🖼"),
+                  h("div",{style:{fontSize:11,fontWeight:600,color:jobImgB64?C.ora:C.gray}},jobImgB64?"Bild geladen":"Screenshot hochladen"),
+                  h("div",{style:{fontSize:9.5,color:"#bbb",marginTop:2}},"JPG / PNG / Screenshot")
+                )
+              ),
+              h("input",{ref:pdfRef,type:"file",accept:".pdf",onChange:function(ev){handleJobFile(ev,"pdf");},style:{display:"none"}}),
+              h("input",{ref:imgRef,type:"file",accept:"image/*",onChange:function(ev){handleJobFile(ev,"img");},style:{display:"none"}}),
+              h("div",{style:{display:"flex",alignItems:"center",gap:8,margin:"4px 0"}},
+                h("div",{style:{flex:1,height:1,background:C.border}}),
+                h("span",{style:{fontSize:10,color:"#bbb",flexShrink:0}},"oder"),
+                h("div",{style:{flex:1,height:1,background:C.border}})
+              ),
+              h(Inp,{label:"Link zur Stellenanzeige",value:jobLink,onChange:setJobLink,placeholder:"https://jobs.siemens.com/…"}),
+              h("div",{style:{display:"flex",alignItems:"center",gap:8,margin:"4px 0"}},
+                h("div",{style:{flex:1,height:1,background:C.border}}),
+                h("span",{style:{fontSize:10,color:"#bbb",flexShrink:0}},"oder"),
+                h("div",{style:{flex:1,height:1,background:C.border}})
+              ),
+              h(Txt,{label:"Text der Stellenanzeige einfügen",value:jobText,onChange:setJobText,rows:4,placeholder:"Kompletten Anzeigentext hier einfügen…"}),
+              jobErr&&h("div",{style:{background:"#fff0f0",border:"1px solid #fca5a5",borderRadius:6,padding:"9px 12px",fontSize:11.5,color:"#dc2626",display:"flex",gap:8}},
+                h("span",null,"⚠️"),h("span",null,jobErr)
+              ),
+              h("button",{onClick:doJob,disabled:jobLoad,
+                style:{padding:"13px",background:jobLoad?"#999":C.ora,color:C.white,border:"none",borderRadius:7,fontSize:12.5,fontWeight:700,cursor:jobLoad?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:9,fontFamily:"inherit",transition:"background 0.15s"},
+                onMouseOver:function(ev){if(!jobLoad)ev.currentTarget.style.background=C.ora2;},
+                onMouseOut:function(ev){if(!jobLoad)ev.currentTarget.style.background=jobLoad?"#999":C.ora;}},
+                jobLoad
+                  ?h(React.Fragment,null,h("div",{style:{width:14,height:14,border:"2px solid rgba(255,255,255,0.3)",borderTopColor:C.white,borderRadius:"50%",animation:"spin 0.7s linear infinite"}}),"Analysiere Stellenanzeige…")
+                  :"🔍 Stellenanzeige analysieren & anpassen"
+              )
+            ),
+            // Analysis result
+            analysis&&h("div",{style:{display:"flex",flexDirection:"column",gap:10}},
+              // Match score card
+              h("div",{style:{background:"#f0f9f0",border:"1.5px solid "+C.green,borderRadius:8,padding:14}},
+                h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}},
+                  h("div",{style:{fontWeight:700,fontSize:12.5,color:"#1a5c3a"}},analysis.positionTitle),
+                  h("div",{style:{background:C.green,color:"#fff",padding:"3px 10px",borderRadius:20,fontSize:12,fontWeight:700}},analysis.matchScore+"% Match")
+                ),
+                h("div",{style:{background:"#e0ede6",borderRadius:20,height:7,marginBottom:8,overflow:"hidden"}},
+                  h("div",{style:{width:analysis.matchScore+"%",background:C.green,height:"100%",borderRadius:20,transition:"width 0.6s"}})
+                ),
+                h("div",{style:{fontSize:11,color:"#2d6a4f",lineHeight:1.5}},analysis.matchReason)
+              ),
+              // Keywords
+              h("div",{style:{background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:12}},
+                h("div",{style:{fontSize:10,fontWeight:700,color:C.navy2,letterSpacing:0.8,textTransform:"uppercase",marginBottom:8}},"Keywords aus der Anzeige"),
+                h("div",{style:{display:"flex",flexWrap:"wrap",gap:5}},
+                  (analysis.keywords||[]).map(function(kw,i){return h("span",{key:i,style:{background:C.navy,color:C.ora,padding:"3px 9px",borderRadius:16,fontSize:10.5,fontWeight:600}},kw);})
+                )
+              ),
+              // Must-have requirements
+              (analysis.mustHave&&analysis.mustHave.length>0)&&h("div",{style:{background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:12}},
+                h("div",{style:{fontSize:10,fontWeight:700,color:C.navy2,letterSpacing:0.8,textTransform:"uppercase",marginBottom:8}},"Pflichtanforderungen"),
+                h("div",{style:{display:"flex",flexDirection:"column",gap:4}},
+                  (analysis.mustHave||[]).map(function(req,i){return h("div",{key:i,style:{fontSize:11,display:"flex",gap:7,alignItems:"flex-start"}},
+                    h("span",{style:{color:C.green,flexShrink:0,marginTop:1}},"✓"),
+                    h("span",{style:{color:C.darkgray||"#444"}},req)
+                  );})
+                )
+              ),
+              // Actions
+              h("div",{style:{display:"flex",gap:8}},
+                h("button",{
+                  onClick:function(){setTab(4);setSide("ansch");doAnsch();},
+                  style:{flex:1,padding:"10px",background:C.navy,color:C.white,border:"none",borderRadius:6,fontSize:11.5,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}},
+                  "✉️ Anschreiben jetzt erstellen"
+                ),
+                h("button",{
+                  onClick:function(){setAnalysis(null);setJobText("");setJobLink("");setJobImgB64(null);},
+                  style:{padding:"10px 14px",background:"none",border:"1px solid "+C.border,borderRadius:6,fontSize:11,color:C.gray,cursor:"pointer",fontFamily:"inherit"}},
+                  "↺ Neu"
+                )
+              ),
+              h("div",{style:{fontSize:10,color:"#aaa",textAlign:"center"}},"✅ Lebenslauf-Vorschau angepasst · Keywords im Anschreiben eingebaut")
+            )
+          )
+        ),
+        h("div",{style:{padding:"11px 16px",borderTop:"1px solid "+C.border,background:"#fff",flexShrink:0}},
+          h("button",{onClick:function(){alert("Zahlung 17 € → Download: Lebenslauf + Anschreiben als Word & PDF");},style:{width:"100%",padding:"13px",background:C.ora,color:C.white,border:"none",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"inherit",letterSpacing:0.5},onMouseOver:function(ev){ev.currentTarget.style.background=C.ora2;},onMouseOut:function(ev){ev.currentTarget.style.background=C.ora;}},t.ctaBtn),
+          h("div",{style:{textAlign:"center",fontSize:9.5,color:"#aaa",marginTop:5}},t.ctaSub)
+        )
+      ),
+      h("div",{style:{width:"50%",background:"#e8e4dc",padding:18,overflow:"auto",display:"flex",flexDirection:"column"}},
+        h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:11,flexShrink:0}},
+          h("div",{style:{display:"flex",gap:3,background:"#fff",borderRadius:20,padding:"3px"}},
+            h("button",{onClick:function(){setSide("cv");},style:{padding:"5px 14px",borderRadius:16,fontSize:10.5,fontWeight:700,cursor:"pointer",border:"none",background:side==="cv"?C.navy:"transparent",color:side==="cv"?C.white:C.gray,fontFamily:"inherit",transition:"all 0.15s"}},"📄 Lebenslauf"),
+            h("button",{onClick:function(){setSide("ansch");},style:{padding:"5px 14px",borderRadius:16,fontSize:10.5,fontWeight:700,cursor:"pointer",border:"none",background:side==="ansch"?(anschText?C.green:"transparent"):"transparent",color:side==="ansch"?(anschText?C.white:C.gray):C.gray,fontFamily:"inherit",transition:"all 0.15s"}},anschText?"✉️ Anschreiben ✓":"✉️ Anschreiben")
+          ),
+          h("div",{style:{fontSize:9.5,color:"#aaa",display:"flex",gap:8,alignItems:"center"}},h("span",null,fontLabel),analysis&&h("span",{style:{color:C.green}},"· KI ✓"),h("span",{style:{color:"#bbb"},"title":"Anschreiben ist direkt in der Vorschau bearbeitbar"},"✏️ editierbar"))
+        ),
+        h("div",{style:{flex:1}},side==="cv"?h(CvPreview,{cv:cv,fontId:font,photo:photo,analysis:analysis}):h(AnschPreview,{cv:cv,anschText:anschText,fontId:font,loading:anschLoad,onChange:setAnschText}))
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("bl-root")).render(h(BureauLingo));
+</script>
+</body>
+</html>
